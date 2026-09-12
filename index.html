@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1F5FA8">
+<!--APP-HEAD-START-->
+<title>AORS Wednesday</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#EEF0F3; --surface:#FFFFFF; --sunk:#E4E7EC; --ink:#1B222C; --muted:#5B6674; --line:#D3D8DF;
+  --accent:#1F5FA8; --accent-ink:#FFFFFF; --accent-tint:#E4EDF8;
+  --mine:#8A6A12; --mine-tint:#FBF2D2; --mine-line:#E3C65A;
+  --team:#5E5A9E; --team-tint:#ECEAF8;
+  --now:#B7422B;
+  --shadow:0 10px 30px rgba(20,30,45,.18);
+  --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161C; --surface:#1A2029; --sunk:#232A34; --ink:#E7EAEF; --muted:#98A2AF; --line:#2C3440;
+    --accent:#7FB3F0; --accent-ink:#0E1A2B; --accent-tint:#1D2C40;
+    --mine:#E4C45C; --mine-tint:#2C2714; --mine-line:#7A6624;
+    --team:#B4AEF0; --team-tint:#262440;
+    --now:#F0836B;
+    --shadow:0 10px 30px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161C; --surface:#1A2029; --sunk:#232A34; --ink:#E7EAEF; --muted:#98A2AF; --line:#2C3440;
+  --accent:#7FB3F0; --accent-ink:#0E1A2B; --accent-tint:#1D2C40;
+  --mine:#E4C45C; --mine-tint:#2C2714; --mine-line:#7A6624;
+  --team:#B4AEF0; --team-tint:#262440;
+  --now:#F0836B;
+  --shadow:0 10px 30px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.45 var(--sans);min-height:100vh}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- shell ---------- */
+#app{max-width:680px;margin:0 auto;padding:0 16px calc(84px + env(safe-area-inset-bottom));}
+header.top{position:sticky;top:0;z-index:5;background:var(--ground);padding:calc(10px + env(safe-area-inset-top)) 0 8px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}
+header.top h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.01em}
+header.top .sub{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.02em;white-space:nowrap}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr}
+nav.tabs button{padding:12px 8px 10px;font-size:13px;font-weight:500;color:var(--muted);border-top:2px solid transparent;margin-top:-1px}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(--accent)}
+.view[hidden]{display:none}
+
+/* ---------- chips & badges ---------- */
+.chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.03em;padding:2px 7px;border-radius:4px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip.wg{color:var(--ink)}
+.chip.room{background:transparent;border:1px solid var(--line)}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:999px;letter-spacing:.01em}
+.badge.mine{background:var(--mine-tint);color:var(--mine);border:1px solid var(--mine-line)}
+.badge.team{background:var(--team-tint);color:var(--team)}
+.badge.now{background:var(--now);color:#fff}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* ---------- day timeline ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12px;color:var(--muted);padding:12px 0 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.timeline{list-style:none;margin:0;padding:8px 0 0}
+.slot{display:grid;grid-template-columns:52px 1fr;gap:0 12px;padding:10px 0;border-bottom:1px solid var(--line);position:relative}
+.slot .t{font-family:var(--mono);font-size:12.5px;line-height:1.35;color:var(--muted);padding-top:4px;font-variant-numeric:tabular-nums}
+.slot .t b{display:block;color:var(--ink);font-weight:500}
+.slot.fixed .body{color:var(--muted);font-size:14px;padding-top:4px}
+.slot.fixed .body strong{color:var(--ink);font-weight:500}
+.slot.fixed .body .where{display:block;font-size:12.5px;margin-top:1px}
+.slot.fixed.long .body{padding:4px 0}
+.slot.session .head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-size:12px;color:var(--muted)}
+.slot.session .head .n{font-weight:600;color:var(--ink);font-family:var(--mono);letter-spacing:.02em}
+.pick{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:11px 12px 10px;position:relative;overflow:hidden;transition:border-color .12s}
+.pick:active{border-color:var(--accent)}
+.pick.empty{background:transparent;border-style:dashed;color:var(--muted);padding:14px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pick.empty .cta{color:var(--accent);font-weight:500;white-space:nowrap}
+.pick.mine{border-color:var(--mine-line);background:linear-gradient(90deg,var(--mine-tint),var(--surface) 40%)}
+.pick.mine::before,.pick.team::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--mine)}
+.pick.team::before{background:var(--team)}
+.pick .title{font-weight:600;font-size:15px;line-height:1.3;text-wrap:balance;margin:0 0 4px}
+.pick .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+.pick .who{font-size:13px;color:var(--muted);margin-top:5px}
+.pick .alt{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--mine)}
+.slot.now::after{content:"";position:absolute;left:-16px;top:0;bottom:0;width:3px;background:var(--now)}
+.dayfoot{display:flex;gap:10px;flex-wrap:wrap;padding:16px 0 8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:6px;font-weight:500;font-size:14px;border:1px solid var(--line);background:var(--surface)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.quiet{border-color:transparent;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:9px 14px;border-radius:6px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.toast.show{opacity:1}
+
+/* ---------- browse ---------- */
+.tools{position:sticky;top:53px;z-index:4;background:var(--ground);padding:10px 0 8px}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:0 10px}
+.search input{flex:1;border:0;background:transparent;padding:10px 0;font:inherit;color:var(--ink);min-width:0}
+.search input::placeholder{color:var(--muted)}
+.filters{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filters button{flex:none;font-family:var(--mono);font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.count{font-size:12px;color:var(--muted);padding:6px 0 2px}
+.group h2{font-size:13px;font-weight:600;margin:18px 0 4px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.group h2 .mono{color:var(--muted);font-weight:500;font-size:12px}
+.group p.desc{margin:0 0 8px;font-size:12.5px;color:var(--muted);max-width:60ch}
+.row{display:grid;grid-template-columns:62px 1fr;gap:10px;width:100%;text-align:left;padding:10px 0;border-bottom:1px solid var(--line);align-items:start}
+.row .when{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.4;padding-top:2px;white-space:nowrap}
+.row .when b{display:block;color:var(--ink);font-weight:500}
+.row .ttl{font-weight:500;font-size:14.5px;line-height:1.3;margin:0 0 3px}
+.row .by{font-size:12.5px;color:var(--muted)}
+.row .flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.row.chosen .ttl::before{content:"✓ ";color:var(--accent);font-weight:600}
+.row.mine-row .ttl{color:var(--mine)}
+
+/* ---------- sheets ---------- */
+.sheet{position:fixed;inset:0;z-index:10;background:var(--ground);display:flex;flex-direction:column;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){.sheet{animation:none}}
+.sheet .bar{position:sticky;top:0;background:var(--ground);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 12px 8px;display:flex;align-items:center;gap:8px;z-index:2}
+.sheet .bar h2{font-size:15px;font-weight:600;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet .bar .sub{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.back{display:inline-flex;align-items:center;gap:4px;padding:6px 10px 6px 4px;border-radius:6px;color:var(--accent);font-weight:500}
+.sheet .scroll{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.sheet .in{max-width:680px;margin:0 auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom))}
+.note{background:var(--mine-tint);border:1px solid var(--mine-line);color:var(--mine);border-radius:8px;padding:10px 12px;font-size:13px;margin:0 0 10px}
+.note.team{background:var(--team-tint);border-color:transparent;color:var(--team)}
+.option{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:11px 12px;margin:8px 0;position:relative;overflow:hidden}
+.option.mine{border-color:var(--mine-line)}
+.option.mine::before,.option.team::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--mine)}
+.option.team::before{background:var(--team)}
+.option.chosen{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.option .main{min-width:0;text-align:left}
+.option .ttl{font-weight:600;font-size:14.5px;line-height:1.3;margin:0 0 4px}
+.option .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+.option .by{font-size:12.5px;color:var(--muted);margin-top:4px}
+.option .go{align-self:center;font-family:var(--mono);font-size:12px;color:var(--accent);padding:6px 0 6px 6px;white-space:nowrap}
+.option .sel{grid-column:1/-1;display:flex;gap:8px;align-items:center;margin-top:2px}
+.option .sel .btn{padding:6px 12px;font-size:13px}
+.option .sel .chosen-lbl{font-size:12.5px;color:var(--accent);font-weight:500}
+.detail h2.big{font-size:20px;font-weight:600;line-height:1.25;text-wrap:balance;margin:6px 0 10px;letter-spacing:-.01em}
+.detail .facts{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13.5px;margin:0 0 14px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.detail .facts dt{color:var(--muted);font-family:var(--mono);font-size:12px;padding-top:2px}
+.detail .facts dd{margin:0}
+.detail .facts dd .org{color:var(--muted);font-size:12.5px}
+.detail .facts dd.me{color:var(--mine);font-weight:600}
+.detail .actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.detail .abs p{margin:0 0 12px;max-width:66ch;line-height:1.55}
+.detail .abs{border-top:1px solid var(--line);padding-top:12px}
+.detail .abs h3{font-size:12px;font-family:var(--mono);color:var(--muted);font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px}
+</style>
+<!--APP-HEAD-END-->
+</head>
+<body>
+<!--APP-BODY-START-->
+<div id="app">
+  <header class="top">
+    <h1>AORS Wednesday</h1>
+    <span class="sub" id="hdr-sub">16 SEP 2026 · MTF, APG</span>
+  </header>
+
+  <section class="view" id="view-day">
+    <div class="legend" aria-hidden="true">
+      <span><i style="background:var(--mine)"></i>You present</span>
+      <span><i style="background:var(--team)"></i>Your team presents</span>
+      <span><i style="background:var(--accent)"></i>Your pick</span>
+    </div>
+    <ol class="timeline" id="timeline"></ol>
+    <div class="dayfoot">
+      <button class="btn primary" id="copy-plan">Copy my plan</button>
+      <button class="btn quiet" id="reset-plan">Reset to my talks</button>
+    </div>
+  </section>
+
+  <section class="view" id="view-talks" hidden>
+    <div class="tools">
+      <label class="search"><span class="sr">Search talks</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search titles, people, abstracts, rooms" autocomplete="off">
+      </label>
+      <div class="filters" id="filters" role="group" aria-label="Filter by working group"></div>
+    </div>
+    <div class="count" id="count"></div>
+    <div id="list"></div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Views"><div class="in">
+  <button id="tab-day" role="tab" aria-selected="true">My day</button>
+  <button id="tab-talks" role="tab" aria-selected="false">All talks</button>
+</div></nav>
+<div class="toast" id="toast" role="status"></div>
+<div id="sheets"></div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  const D = window.AORS_DATA;
+  const KEY = 'aors2026.picks.v1';
+  const talksById = Object.fromEntries(D.talks.map(t => [t.id, t]));
+  const wgOrder = Object.keys(D.wgs);
+  const ME = D.me;
+
+  // ---------- picks (persisted per device) ----------
+  function defaultPicks(){
+    const p = {};
+    for (const s of D.sessions){
+      const mine = D.talks.filter(t => t.session === s.n && t.myRole);
+      const own = mine.find(t => t.myRole === 'presenting') || mine[0];
+      if (own) p[s.n] = own.id;
+    }
+    return p;
+  }
+  function load(){
+    try { const v = JSON.parse(localStorage.getItem(KEY)); if (v && typeof v === 'object') return v; } catch(e){}
+    return defaultPicks();
+  }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch(e){} }
+  let picks = load();
+
+  // ---------- helpers ----------
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmt = t => t.slice(0,2) + t.slice(2);
+  const sessionOf = n => D.sessions.find(s => s.n === n);
+  const talksIn = n => D.talks.filter(t => t.session === n).sort((a,b) => wgOrder.indexOf(a.wg) - wgOrder.indexOf(b.wg) || a.room.localeCompare(b.room));
+  const people = t => [t.presenter, ...t.coauthors].map(p => p.name).join(', ');
+  const roleBadge = t => t.myRole === 'presenting' ? '<span class="badge mine"><span class="dot"></span>You present</span>'
+                       : t.myRole === 'coauthor' ? '<span class="badge team"><span class="dot"></span>Your team presents</span>' : '';
+  const wgChip = t => `<span class="chip wg">${esc(t.wg)}</span>`;
+  const roomChip = t => `<span class="chip room">RM ${esc(t.room)}</span>`;
+
+  // Current time in Eastern, as HHMM string, only meaningful on the day itself.
+  function nowET(){
+    try {
+      const parts = new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(new Date());
+      const g = k => parts.find(p => p.type === k).value;
+      const date = `${g('year')}-${g('month')}-${g('day')}`;
+      const hh = g('hour') === '24' ? '00' : g('hour');
+      return date === D.date ? hh + g('minute') : null;
+    } catch(e){ return null; }
+  }
+
+  let toastTimer;
+  function toast(msg){
+    const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  // ---------- day view ----------
+  function renderDay(){
+    const now = nowET();
+    const rows = [
+      ...D.fixed.map(f => ({kind:'fixed', start:f.start, end:f.end, f})),
+      ...D.sessions.map(s => ({kind:'session', start:s.start, end:s.end, s}))
+    ].sort((a,b) => a.start.localeCompare(b.start));
+    const html = rows.map(r => {
+      const isNow = now && now >= r.start && now < r.end;
+      const time = `<div class="t"><b>${fmt(r.start)}</b>${fmt(r.end)}</div>`;
+      if (r.kind === 'fixed'){
+        const f = r.f;
+        const link = f.link ? ` · <a href="${esc(f.link)}" target="_blank" rel="noopener">Teams link</a>` : f.url ? ` · <a href="${esc(f.url)}" target="_blank" rel="noopener">Website</a>` : '';
+        return `<li class="slot fixed ${isNow?'now':''}">${time}<div class="body"><strong>${esc(f.title)}</strong>${isNow?' <span class="badge now">Now</span>':''}${f.where?`<span class="where">${esc(f.where)}${link}</span>`:''}</div></li>`;
+      }
+      const s = r.s;
+      const mine = D.talks.filter(t => t.session === s.n && t.myRole);
+      const pickId = picks[s.n];
+      const t = pickId && talksById[pickId];
+      let head = `<div class="head"><span class="n">SESSION ${s.n}</span>`;
+      if (mine.some(m => m.myRole === 'presenting')) head += '<span class="badge mine"><span class="dot"></span>You present</span>';
+      else if (mine.length) head += '<span class="badge team"><span class="dot"></span>Your team presents</span>';
+      if (isNow) head += '<span class="badge now">Now</span>';
+      head += '</div>';
+      let card;
+      if (t){
+        const others = mine.filter(m => m.id !== t.id);
+        card = `<button class="pick ${t.myRole==='presenting'?'mine':t.myRole==='coauthor'?'team':''}" data-open-session="${s.n}" aria-label="Session ${s.n}: ${esc(t.title)}. Change">
+          <p class="title">${esc(t.title)}</p>
+          <div class="meta">${wgChip(t)}${roomChip(t)}<span>${esc(D.rooms[t.room].floor)} floor</span></div>
+          <div class="who">${esc(people(t))}</div>
+          ${others.length ? `<div class="alt">Also this slot: ${others.map(o => `${esc(o.title)} (RM ${o.room}, ${o.myRole==='presenting'?'you present':'you co-author'})`).join('; ')}</div>` : ''}
+        </button>`;
+      } else {
+        card = `<button class="pick empty" data-open-session="${s.n}"><span>Nothing picked yet · ${talksIn(s.n).length} talks running</span><span class="cta">Choose →</span></button>`;
+      }
+      return `<li class="slot session ${isNow?'now':''}">${time}<div>${head}${card}</div></li>`;
+    }).join('');
+    document.getElementById('timeline').innerHTML = html;
+  }
+
+  // ---------- browse view ----------
+  let filterWG = 'all', query = '';
+  function renderFilters(){
+    const el = document.getElementById('filters');
+    const mk = (id, label) => `<button data-wg="${esc(id)}" aria-pressed="${filterWG===id}">${esc(label)}</button>`;
+    el.innerHTML = mk('all', 'All') + mk('mine', 'Mine') + mk('picked', 'Picked') + wgOrder.map(w => mk(w, w)).join('');
+  }
+  function matches(t){
+    if (filterWG === 'mine' && !t.myRole) return false;
+    if (filterWG === 'picked' && picks[t.session] !== t.id) return false;
+    if (filterWG !== 'all' && filterWG !== 'mine' && filterWG !== 'picked' && t.wg !== filterWG) return false;
+    if (!query) return true;
+    const hay = [t.title, t.wg, 'RM ' + t.room, people(t), t.presenter.org, ...t.coauthors.map(c => c.org), ...t.abstract].join(' ').toLowerCase();
+    return query.split(/\s+/).every(w => hay.includes(w));
+  }
+  function renderList(){
+    const hits = D.talks.filter(matches);
+    document.getElementById('count').textContent = `${hits.length} of ${D.talks.length} talks`;
+    const groups = wgOrder.map(w => ({w, items: hits.filter(t => t.wg === w).sort((a,b) => a.session - b.session || a.room.localeCompare(b.room))})).filter(g => g.items.length);
+    document.getElementById('list').innerHTML = groups.map(g => `
+      <div class="group">
+        <h2>${esc(g.w)} <span>${esc(D.wgs[g.w].name)}</span></h2>
+        ${filterWG === g.w ? `<p class="desc">${esc(D.wgs[g.w].desc)}</p>` : ''}
+        ${g.items.map(t => {
+          const s = sessionOf(t.session);
+          const chosen = picks[t.session] === t.id;
+          return `<button class="row ${chosen?'chosen':''} ${t.myRole==='presenting'?'mine-row':''}" data-open-talk="${t.id}">
+            <div class="when"><b>${fmt(s.start)}</b>Sess ${t.session}<br>RM ${esc(t.room)}</div>
+            <div><p class="ttl">${esc(t.title)}</p><div class="by">${esc(people(t))} · ${esc(t.presenter.org)}</div>
+            ${t.myRole ? `<div class="flags">${roleBadge(t)}</div>` : ''}</div>
+          </button>`;
+        }).join('')}
+      </div>`).join('') || '<p class="count">No talks match. Try fewer words.</p>';
+  }
+
+  // ---------- sheets (session picker, talk detail) ----------
+  const sheets = document.getElementById('sheets');
+  const stack = [];
+  function pushSheet(html, onMount){
+    const el = document.createElement('div'); el.className = 'sheet'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true');
+    el.innerHTML = html; sheets.appendChild(el); stack.push(el);
+    document.body.style.overflow = 'hidden';
+    if (onMount) onMount(el);
+    history.pushState({sheet: stack.length}, '');
+    el.querySelector('.back').focus();
+  }
+  function popSheet(fromHistory){
+    const el = stack.pop(); if (!el) return;
+    el.remove();
+    if (!stack.length) document.body.style.overflow = '';
+    if (!fromHistory) history.back();
+  }
+  window.addEventListener('popstate', () => { if (stack.length) popSheet(true); });
+
+  function choose(sessionN, talkId){
+    if (picks[sessionN] === talkId) delete picks[sessionN]; else picks[sessionN] = talkId;
+    save(); renderDay(); renderList();
+    const t = talksById[talkId];
+    toast(picks[sessionN] === talkId ? `Session ${sessionN}: RM ${t.room}` : `Session ${sessionN} cleared`);
+  }
+
+  function openSession(n){
+    const s = sessionOf(n);
+    const build = () => {
+      const mine = D.talks.filter(t => t.session === n && t.myRole).sort((a,b) => (a.myRole==='presenting'?0:1) - (b.myRole==='presenting'?0:1));
+      const noteHtml = mine.map(m => m.myRole === 'presenting'
+        ? `<p class="note">You are presenting <strong>${esc(m.title)}</strong> in RM ${m.room} this session.</p>`
+        : `<p class="note team">${esc(m.presenter.name)} presents <strong>${esc(m.title)}</strong> in RM ${m.room}, which you co-authored.</p>`).join('');
+      const opts = talksIn(n).map(t => {
+        const chosen = picks[n] === t.id;
+        return `<div class="option ${chosen?'chosen':''} ${t.myRole==='presenting'?'mine':t.myRole==='coauthor'?'team':''}">
+          <button class="main" data-open-talk="${t.id}" aria-label="Details: ${esc(t.title)}">
+            <p class="ttl">${esc(t.title)}</p>
+            <div class="meta">${wgChip(t)}${roomChip(t)}${roleBadge(t)}</div>
+            <div class="by">${esc(people(t))} · ${esc(t.presenter.org)}</div>
+          </button>
+          <button class="go" data-open-talk="${t.id}" aria-hidden="true">Abstract →</button>
+          <div class="sel">
+            <button class="btn ${chosen?'':'primary'}" data-choose="${t.id}" data-session="${n}">${chosen ? 'Remove' : 'Attend this'}</button>
+            ${chosen ? '<span class="chosen-lbl">✓ Your pick for this slot</span>' : ''}
+          </div>
+        </div>`;
+      }).join('');
+      return `<div class="bar"><button class="back">‹ My day</button><h2>Session ${n}</h2><span class="sub">${fmt(s.start)}–${fmt(s.end)}</span></div>
+        <div class="scroll"><div class="in">${noteHtml}${opts}</div></div>`;
+    };
+    pushSheet(build(), el => {
+      el.addEventListener('click', e => {
+        const c = e.target.closest('[data-choose]');
+        if (c){ choose(+c.dataset.session, c.dataset.choose); el.innerHTML = build(); return; }
+      });
+    });
+  }
+
+  function openTalk(id){
+    const t = talksById[id]; const s = sessionOf(t.session); const room = D.rooms[t.room];
+    const build = () => {
+      const chosen = picks[t.session] === t.id;
+      const person = p => `${esc(p.name)}${p.name === ME ? ' (you)' : ''} <span class="org">· ${esc(p.org)}</span>`;
+      return `<div class="bar"><button class="back">‹ Back</button><h2>${esc(t.wg)} · ${esc(D.wgs[t.wg].name)}</h2></div>
+      <div class="scroll"><div class="in detail">
+        <div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${roleBadge(t)}${chosen ? '<span class="badge" style="background:var(--accent-tint);color:var(--accent)">✓ Your pick</span>' : ''}</div>
+        <h2 class="big">${esc(t.title)}</h2>
+        <dl class="facts">
+          <dt>When</dt><dd class="mono">Session ${t.session} · ${fmt(s.start)}–${fmt(s.end)}</dd>
+          <dt>Where</dt><dd>RM ${esc(t.room)}, ${esc(room.floor)} floor <span class="org">· ${esc(room.label)}</span><br><a href="${esc(room.link)}" target="_blank" rel="noopener">Join virtually (Teams, RM ${esc(t.room)})</a></dd>
+          <dt>Presenter</dt><dd class="${t.presenter.name===ME?'me':''}">${person(t.presenter)}</dd>
+          ${t.coauthors.length ? `<dt>Co-authors</dt><dd>${t.coauthors.map(c => `<div class="${c.name===ME?'me':''}">${person(c)}</div>`).join('')}</dd>` : ''}
+        </dl>
+        <div class="actions">
+          <button class="btn ${chosen?'':'primary'}" data-choose="${t.id}" data-session="${t.session}">${chosen ? 'Remove from my day' : `Attend in Session ${t.session}`}</button>
+          <button class="btn" data-open-session="${t.session}">Compare Session ${t.session}</button>
+        </div>
+        <div class="abs"><h3>Abstract</h3>${t.abstract.map(p => `<p>${esc(p)}</p>`).join('')}</div>
+      </div></div>`;
+    };
+    pushSheet(build(), el => {
+      el.addEventListener('click', e => {
+        const c = e.target.closest('[data-choose]');
+        if (c){ choose(+c.dataset.session, c.dataset.choose); const top = el.querySelector('.scroll').scrollTop; el.innerHTML = build(); el.querySelector('.scroll').scrollTop = top; }
+      });
+    });
+  }
+
+  // ---------- global delegation ----------
+  document.addEventListener('click', e => {
+    if (e.target.closest('.back')){ popSheet(false); return; }
+    const os = e.target.closest('[data-open-session]');
+    if (os){ openSession(+os.dataset.openSession); return; }
+    const ot = e.target.closest('[data-open-talk]');
+    if (ot){ openTalk(ot.dataset.openTalk); return; }
+    const f = e.target.closest('[data-wg]');
+    if (f){ filterWG = f.dataset.wg; renderFilters(); renderList(); return; }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && stack.length) popSheet(false); });
+  document.getElementById('q').addEventListener('input', e => { query = e.target.value.trim().toLowerCase(); renderList(); });
+
+  function showTab(which){
+    document.getElementById('view-day').hidden = which !== 'day';
+    document.getElementById('view-talks').hidden = which !== 'talks';
+    document.getElementById('tab-day').setAttribute('aria-selected', which === 'day');
+    document.getElementById('tab-talks').setAttribute('aria-selected', which === 'talks');
+    try { localStorage.setItem('aors2026.tab', which); } catch(e){}
+    window.scrollTo(0,0);
+  }
+  document.getElementById('tab-day').addEventListener('click', () => showTab('day'));
+  document.getElementById('tab-talks').addEventListener('click', () => showTab('talks'));
+
+  document.getElementById('reset-plan').addEventListener('click', () => {
+    picks = defaultPicks(); save(); renderDay(); renderList(); toast('Reset to the talks you are on');
+  });
+  document.getElementById('copy-plan').addEventListener('click', async () => {
+    const lines = [`AORS 2026 · Wednesday 16 SEP · ${ME}`, ''];
+    const rows = [...D.fixed.map(f => ({start:f.start,end:f.end,text:f.title + (f.where?` — ${f.where}`:'')})),
+      ...D.sessions.map(s => { const t = picks[s.n] && talksById[picks[s.n]];
+        return {start:s.start,end:s.end,text:`Session ${s.n}: ` + (t ? `${t.title} — RM ${t.room} (${t.wg}; ${people(t)})${t.myRole==='presenting'?' [YOU PRESENT]':t.myRole==='coauthor'?' [your team]':''}` : '(nothing picked)')}; })
+    ].sort((a,b) => a.start.localeCompare(b.start));
+    for (const r of rows) lines.push(`${fmt(r.start)}–${fmt(r.end)}  ${r.text}`);
+    const text = lines.join('\n');
+    try { await navigator.clipboard.writeText(text); toast('Plan copied'); }
+    catch(e){
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast('Plan copied'); } catch(e2){ toast('Copy blocked by browser'); }
+      ta.remove();
+    }
+  });
+
+  // ---------- boot ----------
+  renderFilters(); renderDay(); renderList();
+  let tab = 'day'; try { tab = localStorage.getItem('aors2026.tab') || 'day'; } catch(e){}
+  showTab(tab);
+  setInterval(renderDay, 60000);
+})();
+</script>
+<!--APP-BODY-END-->
+</body>
+</html>
