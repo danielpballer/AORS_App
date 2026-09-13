@@ -160,6 +160,19 @@ nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(-
 .detail .actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
 .detail .abs p{margin:0 0 12px;max-width:66ch;line-height:1.55}
 .detail .abs{border-top:1px solid var(--line);padding-top:12px}
+.people{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
+.person{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.person.me{border-color:var(--mine-line)}
+.avatar{width:52px;height:52px;border-radius:50%;background:var(--sunk);color:var(--muted);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:600;font-size:16px;letter-spacing:.02em;overflow:hidden;flex:none}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.person .nm{font-weight:600;font-size:14.5px;line-height:1.25}
+.person .nm small{font-weight:500;color:var(--muted);font-size:12px;margin-left:6px}
+.person .hl{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.35}
+.person .li{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:6px;border:1px solid var(--line);font-size:12.5px;font-weight:500;color:var(--accent);text-decoration:none;white-space:nowrap}
+.person .li.verified{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.person .li svg{width:14px;height:14px;fill:currentColor}
+.person .src{font-size:11px;color:var(--muted);margin-top:3px}
+@media (max-width:420px){.person{grid-template-columns:44px 1fr;}.avatar{width:44px;height:44px;font-size:14px}.person .li{grid-column:2;justify-self:start}}
 .detail .abs h3{font-size:12px;font-family:var(--mono);color:var(--muted);font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin:0 0 8px}
 </style>
 <!--APP-HEAD-END-->
@@ -240,6 +253,23 @@ nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(-
   const roleBadge = t => t.myRole === 'presenting' ? '<span class="badge mine"><span class="dot"></span>You present</span>'
                        : t.myRole === 'coauthor' ? '<span class="badge team"><span class="dot"></span>Your team presents</span>' : '';
   const wgChip = t => `<span class="chip wg">${esc(t.wg)}</span>`;
+  const PEOPLE = D.people || {};
+  const LI_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 2H3.6A1.6 1.6 0 0 0 2 3.6v16.8A1.6 1.6 0 0 0 3.6 22h16.8a1.6 1.6 0 0 0 1.6-1.6V3.6A1.6 1.6 0 0 0 20.4 2zM8 19H5V9h3zM6.5 7.7a1.7 1.7 0 1 1 0-3.4 1.7 1.7 0 0 1 0 3.4zM19 19h-3v-4.9c0-1.2 0-2.7-1.6-2.7s-1.9 1.3-1.9 2.6V19h-3V9h2.9v1.4h.1a3.2 3.2 0 0 1 2.8-1.5c3 0 3.6 2 3.6 4.6z"/></svg>';
+  const initials = n => n.replace(/^(COL|LTC|MAJ|CPT|2LT|Dr\.)\s+/,'').split(/\s+/).filter(Boolean).map(w => w[0]).filter((c,i,a) => i === 0 || i === a.length-1).join('').toUpperCase();
+  const liSearch = (name, org) => 'https://www.linkedin.com/search/results/people/?keywords=' + encodeURIComponent(name.replace(/^(COL|LTC|MAJ|CPT|2LT|Dr\.)\s+/,'') + ' ' + org);
+  function personCard(p, role){
+    const info = PEOPLE[p.name] || {};
+    const isMe = p.name === ME;
+    const avatar = info.photo ? `<span class="avatar"><img src="${esc(info.photo)}" alt=""></span>` : `<span class="avatar" aria-hidden="true">${esc(initials(p.name))}</span>`;
+    const link = info.linkedin
+      ? `<a class="li verified" href="${esc(info.linkedin)}" target="_blank" rel="noopener">${LI_ICON}LinkedIn</a>`
+      : `<a class="li" href="${esc(liSearch(p.name, p.org))}" target="_blank" rel="noopener">${LI_ICON}Find on LinkedIn</a>`;
+    return `<div class="person ${isMe?'me':''}">${avatar}<div>
+      <div class="nm">${esc(p.name)}${isMe?' (you)':''}<small>${esc(role)}</small></div>
+      <div class="hl">${esc(info.headline || p.org)}${info.headline ? ` · ${esc(p.org)}` : ''}</div>
+      ${info.photoSource ? `<div class="src">Photo: <a href="${esc(info.photoSource)}" target="_blank" rel="noopener">official source</a></div>` : ''}
+    </div>${isMe ? '' : link}</div>`;
+  }
   const roomChip = t => `<span class="chip room">RM ${esc(t.room)}</span>`;
 
   // Current time in Eastern, as HHMM string, only meaningful on the day itself.
@@ -398,7 +428,6 @@ nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(-
     const t = talksById[id]; const s = sessionOf(t.session); const room = D.rooms[t.room];
     const build = () => {
       const chosen = picks[t.session] === t.id;
-      const person = p => `${esc(p.name)}${p.name === ME ? ' (you)' : ''} <span class="org">· ${esc(p.org)}</span>`;
       return `<div class="bar"><button class="back">‹ Back</button><h2>${esc(t.wg)} · ${esc(D.wgs[t.wg].name)}</h2></div>
       <div class="scroll"><div class="in detail">
         <div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${roleBadge(t)}${chosen ? '<span class="badge" style="background:var(--accent-tint);color:var(--accent)">✓ Your pick</span>' : ''}</div>
@@ -406,9 +435,8 @@ nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(-
         <dl class="facts">
           <dt>When</dt><dd class="mono">Session ${t.session} · ${fmt(s.start)}–${fmt(s.end)}</dd>
           <dt>Where</dt><dd>RM ${esc(t.room)}, ${esc(room.floor)} floor <span class="org">· ${esc(room.label)}</span><br><a href="${esc(room.link)}" target="_blank" rel="noopener">Join virtually (Teams, RM ${esc(t.room)})</a></dd>
-          <dt>Presenter</dt><dd class="${t.presenter.name===ME?'me':''}">${person(t.presenter)}</dd>
-          ${t.coauthors.length ? `<dt>Co-authors</dt><dd>${t.coauthors.map(c => `<div class="${c.name===ME?'me':''}">${person(c)}</div>`).join('')}</dd>` : ''}
         </dl>
+        <div class="people">${personCard(t.presenter, 'Presenter')}${t.coauthors.map(c => personCard(c, 'Co-author')).join('')}</div>
         <div class="actions">
           <button class="btn ${chosen?'':'primary'}" data-choose="${t.id}" data-session="${t.session}">${chosen ? 'Remove from my day' : `Attend in Session ${t.session}`}</button>
           <button class="btn" data-open-session="${t.session}">Compare Session ${t.session}</button>
