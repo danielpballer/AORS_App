@@ -579,7 +579,7 @@ nav.tabs .cnt:empty{display:none}
         <div class="actions">
           <button class="btn ${chosen?'':'primary'}" data-choose="${t.id}" data-session="${t.session}">${chosen ? 'Remove from my plan' : `Attend in Session ${t.session}`}</button>
           ${saveBtn(t.id)}
-          <button class="btn" data-open-session="${t.session}">Compare Session ${t.session}</button>
+          <button class="btn" data-open-session="${t.session}">Everything at ${s.start}–${s.end}</button>
         </div>
         <div class="people">${personCard(t.presenter, 'Presenter')}${t.coauthors.map(c => personCard(c, 'Co-author')).join('')}</div>
         ${peopleNote}
