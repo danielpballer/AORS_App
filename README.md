@@ -14,6 +14,9 @@ A phone-friendly, single-page web app for planning Wednesday, 16 September 2026 
 - **Follow-up** – any talk or session can be saved for follow-up from its detail page or the session
   picker, whether or not it is on your schedule. The Follow-up tab lists them by day with the people
   (LinkedIn links), room, and a notes box, plus a copy-as-text button.
+- **Settings (gear icon)** – choose who you are so your own presenting and co-author slots are
+  flagged (anyone in the program can be selected, so colleagues can use the same link), copy a backup
+  code of everything saved on the device, or restore from one on another phone or browser.
 - Picks, follow-ups and notes are saved in the browser (localStorage) on the device you use. "Copy my plan" puts a plain-text
   version of the day on the clipboard.
 

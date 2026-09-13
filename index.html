@@ -59,7 +59,14 @@ header.top{position:sticky;top:0;z-index:5;background:var(--ground);padding:calc
 .daysel{position:relative;display:inline-flex;align-items:center;flex:none}
 .daysel select{appearance:none;-webkit-appearance:none;font:600 19px/1.2 var(--sans);letter-spacing:-.01em;color:var(--ink);background:transparent;border:0;padding:6px 26px 6px 0;margin:0 0 0 -2px;width:auto;cursor:pointer;border-radius:6px}
 .daysel svg{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:16px;height:16px;pointer-events:none;color:var(--muted)}
-header.top .sub{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.02em;white-space:nowrap;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis}
+header.top .sub{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.02em;white-space:nowrap;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;margin-left:auto}
+.gear{flex:none;width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+.gear svg{width:20px;height:20px}
+.settings h3{font-size:12px;font-family:var(--mono);color:var(--muted);font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin:18px 0 8px}
+.settings p{margin:0 0 10px;font-size:13.5px;color:var(--muted);max-width:60ch}
+.settings select,.settings textarea{width:100%;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:14px/1.4 var(--sans);padding:9px 10px}
+.settings textarea{min-height:88px;font-family:var(--mono);font-size:12px;resize:vertical}
+.settings .row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 nav.tabs .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr}
 nav.tabs button{padding:12px 6px 10px;font-size:13px;font-weight:500;color:var(--muted);border-top:2px solid transparent;margin-top:-1px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
@@ -212,6 +219,7 @@ nav.tabs .cnt:empty{display:none}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
     </label>
     <span class="sub" id="hdr-sub"></span>
+    <button class="gear" id="open-settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </header>
 
   <section class="view" id="view-day">
@@ -249,10 +257,9 @@ nav.tabs .cnt:empty{display:none}
 <script>
 (function(){
   const D = window.AORS_DATA;
-  const KEY = 'aors2026.picks.v1', FU_KEY = 'aors2026.followup.v1', DAY_KEY = 'aors2026.day', TAB_KEY = 'aors2026.tab';
+  const KEY = 'aors2026.picks.v1', FU_KEY = 'aors2026.followup.v1', DAY_KEY = 'aors2026.day', TAB_KEY = 'aors2026.tab', ME_KEY = 'aors2026.me';
   const talksById = Object.fromEntries(D.talks.map(t => [t.id, t]));
   const wgOrder = Object.keys(D.wgs);
-  const ME = D.me;
   const PEOPLE = D.people || {};
   const DAYS = D.days;
   const dayById = Object.fromEntries(DAYS.map(d => [d.id, d]));
@@ -260,6 +267,8 @@ nav.tabs .cnt:empty{display:none}
   const itemsById = {};
   for (const t of D.talks) itemsById[t.id] = {kind:'talk', day:'wed', t};
   for (const day of DAYS) for (const it of (day.items || [])) if (it.kind !== 'admin') itemsById[it.id] = {kind:'item', day:day.id, it};
+
+  const RANK = /^(COL|LTC|MAJ|CPT|2LT|1LT|LTG|BG|Dr\.|Mr\.|Ms\.)\s+/;
 
   // ---------- persisted state ----------
   const store = {
@@ -275,6 +284,11 @@ nav.tabs .cnt:empty{display:none}
     }
     return p;
   }
+  // Who is using the app: drives the "You present" / "Your team presents" flags. Any name in the program can be chosen.
+  const NAMES = [...new Set(D.talks.flatMap(t => [t.presenter.name, ...t.coauthors.map(c => c.name)]))].sort((a,b) => a.replace(RANK,'').localeCompare(b.replace(RANK,'')));
+  let ME = store.get(ME_KEY, D.me); if (ME !== '' && !NAMES.includes(ME)) ME = D.me;
+  function applyMe(){ for (const t of D.talks) t.myRole = t.presenter.name === ME ? 'presenting' : t.coauthors.some(c => c.name === ME) ? 'coauthor' : null; }
+  applyMe();
   let picks = store.get(KEY, null); if (!picks || typeof picks !== 'object') picks = defaultPicks();
   let followup = store.get(FU_KEY, {}); if (!followup || typeof followup !== 'object') followup = {};
   const savePicks = () => store.set(KEY, picks);
@@ -292,14 +306,13 @@ nav.tabs .cnt:empty{display:none}
   const wgChip = t => `<span class="chip wg">${esc(t.wg)}</span>`;
   const roomChip = t => `<span class="chip room">RM ${esc(t.room)}</span>`;
   const LI_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 2H3.6A1.6 1.6 0 0 0 2 3.6v16.8A1.6 1.6 0 0 0 3.6 22h16.8a1.6 1.6 0 0 0 1.6-1.6V3.6A1.6 1.6 0 0 0 20.4 2zM8 19H5V9h3zM6.5 7.7a1.7 1.7 0 1 1 0-3.4 1.7 1.7 0 0 1 0 3.4zM19 19h-3v-4.9c0-1.2 0-2.7-1.6-2.7s-1.9 1.3-1.9 2.6V19h-3V9h2.9v1.4h.1a3.2 3.2 0 0 1 2.8-1.5c3 0 3.6 2 3.6 4.6z"/></svg>';
-  const RANK = /^(COL|LTC|MAJ|CPT|2LT|1LT|LTG|BG|Dr\.|Mr\.|Ms\.)\s+/;
   const initials = n => n.replace(RANK,'').split(/\s+/).filter(Boolean).map(w => w[0]).filter((c,i,a) => i === 0 || i === a.length-1).join('').toUpperCase();
   const liSearch = (name, org) => 'https://www.linkedin.com/search/results/people/?keywords=' + encodeURIComponent(name.replace(RANK,'') + ' ' + (org || '').split(/[·,]/)[0]);
   const liHref = p => (PEOPLE[p.name] || {}).linkedin || liSearch(p.name, p.org);
 
   function personCard(p, role){
     const info = PEOPLE[p.name] || {};
-    const isMe = p.name === ME;
+    const isMe = ME !== '' && p.name === ME;
     const avatar = info.photo ? `<span class="avatar"><img src="${esc(info.photo)}" alt=""></span>` : `<span class="avatar" aria-hidden="true">${esc(initials(p.name))}</span>`;
     const link = info.linkedin
       ? `<a class="li verified" href="${esc(info.linkedin)}" target="_blank" rel="noopener">${LI_ICON}LinkedIn${info.confidence === 'medium' ? ' (likely)' : ''}</a>`
@@ -592,6 +605,43 @@ nav.tabs .cnt:empty{display:none}
       </div></div>`);
   }
 
+  // ---------- settings: identity, backup, restore ----------
+  function backupCode(){
+    const payload = {v:1, me:ME, picks, followup, at:new Date().toISOString()};
+    return 'AORS26:' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  }
+  function parseBackup(code){
+    const m = String(code || '').trim().match(/AORS26:([A-Za-z0-9+/=]+)/);
+    if (!m) throw new Error('That does not look like a backup code.');
+    const obj = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+    if (!obj || obj.v !== 1 || typeof obj.picks !== 'object' || typeof obj.followup !== 'object') throw new Error('Backup code is damaged or from another version.');
+    return obj;
+  }
+  function openSettings(){
+    pushSheet(() => `<div class="bar"><button class="back">‹ Back</button><h2>Settings</h2></div>
+      <div class="scroll"><div class="in settings">
+        <h3>Who are you?</h3>
+        <p>Sessions where this person presents or co-authors are flagged on the schedule, and "Reset to my talks" preselects them. Anyone using this app on their own phone can pick their own name.</p>
+        <select id="me-select">
+          <option value="" ${ME===''?'selected':''}>Not in the program (no highlighting)</option>
+          ${NAMES.map(n => `<option value="${esc(n)}" ${n===ME?'selected':''}>${esc(n)}</option>`).join('')}
+        </select>
+        <h3>Backup</h3>
+        <p>Copies everything saved on this device (who you are, your picks, follow-ups and notes) as one code. Paste it into Notes or a message to yourself, or straight into another phone or browser below.</p>
+        <div class="row2"><button class="btn primary" id="backup-copy">Copy backup code</button><button class="btn" id="backup-show">Show code</button></div>
+        <textarea id="backup-out" readonly hidden aria-label="Backup code"></textarea>
+        <h3>Restore</h3>
+        <p>Paste a backup code here. It replaces what is on this device.</p>
+        <textarea id="restore-in" placeholder="AORS26:…"></textarea>
+        <div class="row2"><button class="btn" id="restore-go">Restore from code</button></div>
+        <h3>Start over</h3>
+        <div class="row2"><button class="btn quiet danger" id="wipe">Clear picks, follow-ups and notes on this device</button></div>
+      </div></div>`);
+  }
+  function setMe(name){
+    ME = name; store.set(ME_KEY, ME); applyMe(); renderAll();
+  }
+
   // ---------- copy helpers ----------
   async function copyText(text, label){
     try { await navigator.clipboard.writeText(text); toast(label); }
@@ -603,7 +653,7 @@ nav.tabs .cnt:empty{display:none}
   }
   function dayText(dayId){
     const day = dayById[dayId];
-    const lines = [`AORS 2026 · ${day.short} · ${day.name} · ${ME}`, ''];
+    const lines = [`AORS 2026 · ${day.short} · ${day.name}${ME ? ' · ' + ME : ''}`, ''];
     let rows;
     if (dayId === 'wed'){
       rows = [...D.fixed.map(f => ({start:f.start,end:f.end,text:f.title + (f.where?` — ${f.where}`:'')})),
@@ -617,7 +667,7 @@ nav.tabs .cnt:empty{display:none}
     return lines.join('\n');
   }
   function followupText(){
-    const lines = [`AORS 2026 · Follow-up list · ${ME}`, ''];
+    const lines = [`AORS 2026 · Follow-up list${ME ? ' · ' + ME : ''}`, ''];
     for (const e of fuEntries()){
       lines.push(`${dayById[e.day].short} ${e.start}–${e.end} · ${e.where}${e.sub?` · ${e.sub}`:''}`);
       lines.push(`  ${e.title}`);
@@ -648,7 +698,28 @@ nav.tabs .cnt:empty{display:none}
     const cd = e.target.closest('[data-copy-day]');
     if (cd){ copyText(dayText(cd.dataset.copyDay), 'Schedule copied'); return; }
     if (e.target.closest('#copy-fu')){ copyText(followupText(), 'Follow-up list copied'); return; }
+    if (e.target.closest('#open-settings')){ openSettings(); return; }
+    if (e.target.closest('#backup-copy')){ copyText(backupCode(), 'Backup code copied'); return; }
+    if (e.target.closest('#backup-show')){ const ta = document.getElementById('backup-out'); ta.value = backupCode(); ta.hidden = false; ta.focus(); ta.select(); return; }
+    if (e.target.closest('#restore-go')){
+      const ta = document.getElementById('restore-in');
+      try {
+        const obj = parseBackup(ta.value);
+        if (!confirm('Replace the picks, follow-ups and notes on this device with the backup?')) return;
+        picks = obj.picks; followup = obj.followup; savePicks(); saveFU();
+        if (typeof obj.me === 'string' && (obj.me === '' || NAMES.includes(obj.me))) { ME = obj.me; store.set(ME_KEY, ME); applyMe(); }
+        renderAll(); toast('Restored'); popSheet(false);
+      } catch(err){ toast(err.message); }
+      return;
+    }
+    if (e.target.closest('#wipe')){
+      if (!confirm('Clear all picks, follow-ups and notes on this device?')) return;
+      picks = defaultPicks(); followup = {}; savePicks(); saveFU(); renderAll(); toast('Cleared'); return;
+    }
     if (e.target.closest('#reset-plan')){ picks = defaultPicks(); savePicks(); renderAll(); toast('Reset to the talks you are on'); return; }
+  });
+  document.addEventListener('change', e => {
+    if (e.target.id === 'me-select'){ setMe(e.target.value); toast(e.target.value ? `You are ${e.target.value}` : 'Highlighting off'); }
   });
   document.addEventListener('input', e => {
     const n = e.target.closest('[data-note]');
