@@ -262,12 +262,13 @@ nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(-
     const isMe = p.name === ME;
     const avatar = info.photo ? `<span class="avatar"><img src="${esc(info.photo)}" alt=""></span>` : `<span class="avatar" aria-hidden="true">${esc(initials(p.name))}</span>`;
     const link = info.linkedin
-      ? `<a class="li verified" href="${esc(info.linkedin)}" target="_blank" rel="noopener">${LI_ICON}LinkedIn</a>`
+      ? `<a class="li verified" href="${esc(info.linkedin)}" target="_blank" rel="noopener">${LI_ICON}LinkedIn${info.confidence === 'medium' ? ' (likely)' : ''}</a>`
       : `<a class="li" href="${esc(liSearch(p.name, p.org))}" target="_blank" rel="noopener">${LI_ICON}Find on LinkedIn</a>`;
+    const extra = info.profilePage ? `<div class="src"><a href="${esc(info.profilePage)}" target="_blank" rel="noopener">${esc(info.profilePageLabel || 'Profile page')}</a>${info.linkedin ? '' : ' · has photo and bio'}</div>` : '';
     return `<div class="person ${isMe?'me':''}">${avatar}<div>
       <div class="nm">${esc(p.name)}${isMe?' (you)':''}<small>${esc(role)}</small></div>
       <div class="hl">${esc(info.headline || p.org)}${info.headline ? ` · ${esc(p.org)}` : ''}</div>
-      ${info.photoSource ? `<div class="src">Photo: <a href="${esc(info.photoSource)}" target="_blank" rel="noopener">official source</a></div>` : ''}
+      ${extra}
     </div>${isMe ? '' : link}</div>`;
   }
   const roomChip = t => `<span class="chip room">RM ${esc(t.room)}</span>`;
@@ -437,6 +438,7 @@ nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(-
           <dt>Where</dt><dd>RM ${esc(t.room)}, ${esc(room.floor)} floor <span class="org">· ${esc(room.label)}</span><br><a href="${esc(room.link)}" target="_blank" rel="noopener">Join virtually (Teams, RM ${esc(t.room)})</a></dd>
         </dl>
         <div class="people">${personCard(t.presenter, 'Presenter')}${t.coauthors.map(c => personCard(c, 'Co-author')).join('')}</div>
+        <p class="count" style="margin:-8px 0 14px">Filled LinkedIn buttons are matched profiles; "likely" means the name and role fit but the organization wasn't shown. "Find on LinkedIn" opens a search for the name and organization.</p>
         <div class="actions">
           <button class="btn ${chosen?'':'primary'}" data-choose="${t.id}" data-session="${t.session}">${chosen ? 'Remove from my day' : `Attend in Session ${t.session}`}</button>
           <button class="btn" data-open-session="${t.session}">Compare Session ${t.session}</button>
