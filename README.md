@@ -3,12 +3,18 @@
 A phone-friendly, single-page web app for planning Wednesday, 16 September 2026 at the
 64th Army Operations Research Symposium (Mallette Training Facility, Aberdeen Proving Ground).
 
-- **My day** – the full Wednesday timeline (welcome, seven working-group sessions, breaks, lunch,
+- **Day selector** – the title at the top left switches between Monday (tutorials), Tuesday (senior
+  leaders, awards, panel, town halls, reception) and Wednesday (working groups). Each day has its own
+  timeline with Teams links and speaker details.
+- **Schedule** – the full Wednesday timeline (welcome, seven working-group sessions, breaks, lunch,
   out-briefs, social). Each session shows the talk you picked; tap it to compare all talks running
   in that slot. Sessions where Daniel Baller is presenting or co-authoring are flagged.
 - **All talks** – every abstract from the welcome packet, grouped by working group, with search and
   working-group filters. Tap a talk for the full abstract, presenters, room, and the room's Teams link.
-- Picks are saved in the browser (localStorage) on the device you use. "Copy my plan" puts a plain-text
+- **Follow-up** – any talk or session can be saved for follow-up from its detail page or the session
+  picker, whether or not it is on your schedule. The Follow-up tab lists them by day with the people
+  (LinkedIn links), room, and a notes box, plus a copy-as-text button.
+- Picks, follow-ups and notes are saved in the browser (localStorage) on the device you use. "Copy my plan" puts a plain-text
   version of the day on the clipboard.
 
 ## Files
