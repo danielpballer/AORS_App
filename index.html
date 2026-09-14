@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#1F5FA8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <!--APP-HEAD-START-->
 <title>AORS Wednesday</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -60,6 +63,7 @@ header.top{position:sticky;top:0;z-index:5;background:var(--ground);padding:calc
 .daysel select{appearance:none;-webkit-appearance:none;font:600 19px/1.2 var(--sans);letter-spacing:-.01em;color:var(--ink);background:transparent;border:0;padding:6px 26px 6px 0;margin:0 0 0 -2px;width:auto;cursor:pointer;border-radius:6px}
 .daysel svg{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:16px;height:16px;pointer-events:none;color:var(--muted)}
 header.top .sub{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.02em;white-space:nowrap;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;margin-left:auto}
+.offline{flex:none;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;padding:3px 8px;border-radius:999px;background:var(--mine-tint);color:var(--mine);border:1px solid var(--mine-line)}
 .gear{flex:none;width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
 .gear svg{width:20px;height:20px}
 .settings h3{font-size:12px;font-family:var(--mono);color:var(--muted);font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin:18px 0 8px}
@@ -219,6 +223,7 @@ nav.tabs .cnt:empty{display:none}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
     </label>
     <span class="sub" id="hdr-sub"></span>
+    <span class="offline" id="offline-pill" hidden>Offline</span>
     <button class="gear" id="open-settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </header>
 
@@ -746,6 +751,23 @@ nav.tabs .cnt:empty{display:none}
   renderDaySelect(); renderFilters(); renderAll();
   showTab(store.get(TAB_KEY, 'day'));
   setInterval(renderDay, 60000);
+
+  // ---------- offline support ----------
+  const pill = document.getElementById('offline-pill');
+  const setOnline = () => { pill.hidden = navigator.onLine !== false; };
+  window.addEventListener('online', () => { setOnline(); toast('Back online'); });
+  window.addEventListener('offline', () => { setOnline(); toast('Offline · everything still works except links'); });
+  setOnline();
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing; if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) toast('App updated · reopen to get the latest');
+        });
+      });
+    }).catch(() => {});
+  }
 })();
 </script>
 <!--APP-BODY-END-->

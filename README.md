@@ -20,9 +20,18 @@ A phone-friendly, single-page web app for planning Wednesday, 16 September 2026 
 - Picks, follow-ups and notes are saved in the browser (localStorage) on the device you use. "Copy my plan" puts a plain-text
   version of the day on the clipboard.
 
+## Offline use
+
+The app is a small progressive web app. On first load over HTTPS (GitHub Pages) a service worker
+caches the page, data, and icons, so it keeps opening with no signal; an "Offline" pill shows in the
+header when the phone has no connection. Teams and LinkedIn links still need a connection. When
+online, the app fetches the latest files first and falls back to the cache after a few seconds, so
+updates arrive whenever there is signal. "Add to Home screen" installs it with its own icon.
+
 ## Files
 
 - `index.html` – the app (no build step, no dependencies beyond Google Fonts).
+- `sw.js`, `manifest.webmanifest`, `icons/` – offline caching and home-screen install.
 - `data.js` – schedule, room links, working-group descriptions and all 82 abstracts, extracted from
   `2026_AORS_Welcome_Packet_TDAC.pdf`. Sessions and rooms come from the master schedule grid, which
   corrects a few typos in the abstract pages.
