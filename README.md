@@ -33,8 +33,8 @@ updates arrive whenever there is signal. "Add to Home screen" installs it with i
 - `index.html` – the app (no build step, no dependencies beyond Google Fonts).
 - `sw.js`, `manifest.webmanifest`, `icons/` – offline caching and home-screen install.
 - `data.js` – schedule, room links, working-group descriptions and all 82 abstracts, extracted from
-  `2026_AORS_Welcome_Packet_TDAC.pdf`. Sessions and rooms come from the master schedule grid, which
-  corrects a few typos in the abstract pages.
+  `2026_AORS_Welcome_Packet_TDAC.pdf`. Sessions and rooms follow the Working Group Master Schedule v2
+  (14 SEP 2026); abstracts come from the original welcome packet. Two talks added in v2 have no abstract.
 
 ## Running it
 

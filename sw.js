@@ -1,7 +1,7 @@
 /* AORS 2026 planner service worker.
    Core files: network first with a short timeout, falling back to the cache, so updates arrive when
    there is signal and the app still opens when there is none. Fonts: cache first. */
-const VERSION = 'aors-v1';
+const VERSION = 'aors-v2';
 const CORE = ['./', './index.html', './data.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'];
 const NET_TIMEOUT_MS = 4000;

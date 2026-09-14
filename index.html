@@ -296,6 +296,19 @@ nav.tabs .cnt:empty{display:none}
   applyMe();
   let picks = store.get(KEY, null); if (!picks || typeof picks !== 'object') picks = defaultPicks();
   let followup = store.get(FU_KEY, {}); if (!followup || typeof followup !== 'object') followup = {};
+  // Reconcile saved state with the current schedule: talks can move sessions or be dropped in an update.
+  (function migrate(){
+    const fixed = {}; const moved = [];
+    for (const [n, id] of Object.entries(picks)){
+      const t = talksById[id]; if (!t) continue;
+      if (t.session === +n) fixed[n] = id; else moved.push(t);
+    }
+    for (const t of moved) if (!fixed[t.session]) fixed[t.session] = t.id;
+    if (JSON.stringify(fixed) !== JSON.stringify(picks)){ picks = fixed; store.set(KEY, picks); }
+    let fuChanged = false;
+    for (const id of Object.keys(followup)) if (!itemsById[id]) { delete followup[id]; fuChanged = true; }
+    if (fuChanged) store.set(FU_KEY, followup);
+  })();
   const savePicks = () => store.set(KEY, picks);
   const saveFU = () => store.set(FU_KEY, followup);
 
@@ -427,7 +440,7 @@ nav.tabs .cnt:empty{display:none}
       }
       return `<li class="slot session ${isNow?'now':''}">${time}<div>${head}${card}</div></li>`;
     }).join('');
-    return `<div class="legend" aria-hidden="true">
+    return `${D.scheduleVersion ? `<p class="dayintro">${esc(D.scheduleVersion)}. Rooms 207 and 215 became 103 and 213; a few talks changed slots.</p>` : ''}<div class="legend" aria-hidden="true">
         <span><i style="background:var(--mine)"></i>You present</span>
         <span><i style="background:var(--team)"></i>Your team presents</span>
         <span><i style="background:var(--save)"></i>Saved for follow-up</span>
@@ -579,7 +592,7 @@ nav.tabs .cnt:empty{display:none}
         <h2 class="big">${esc(t.title)}</h2>
         <dl class="facts">
           <dt>When</dt><dd class="mono">Wed · Session ${t.session} · ${s.start}–${s.end}</dd>
-          <dt>Where</dt><dd>RM ${esc(t.room)}, ${esc(room.floor)} floor <span class="org">· ${esc(room.label)}</span><br><a href="${esc(room.link)}" target="_blank" rel="noopener">Join virtually (Teams, RM ${esc(t.room)})</a></dd>
+          <dt>Where</dt><dd>RM ${esc(t.room)}, ${esc(room.floor)} floor <span class="org">· ${esc(room.label)}</span><br><a href="${esc(room.link)}" target="_blank" rel="noopener">Join virtually (Teams, RM ${esc(t.room)})</a>${room.linkNote ? `<div class="org">${esc(room.linkNote)}</div>` : ''}</dd>
         </dl>
         <div class="actions">
           <button class="btn ${chosen?'':'primary'}" data-choose="${t.id}" data-session="${t.session}">${chosen ? 'Remove from my plan' : `Attend in Session ${t.session}`}</button>
@@ -588,7 +601,7 @@ nav.tabs .cnt:empty{display:none}
         </div>
         <div class="people">${personCard(t.presenter, 'Presenter')}${t.coauthors.map(c => personCard(c, 'Co-author')).join('')}</div>
         ${peopleNote}
-        <div class="abs"><h3>Abstract</h3>${t.abstract.map(p => `<p>${esc(p)}</p>`).join('')}</div>
+        <div class="abs"><h3>${t.placeholder ? 'About' : 'Abstract'}</h3>${t.abstract.map(p => `<p>${esc(p)}</p>`).join('')}</div>
       </div></div>`;
     });
   }
